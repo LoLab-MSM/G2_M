@@ -23,8 +23,8 @@ from pysb.macros import *
 
 Model()
 
-#def set_dna_damage(damage):
- #   Parameter("DDS", damage)
+def set_dna_damage(damage):
+    Parameter("DDS", damage)
     
     # "Make all model components visible as symbols in the caller's global namespace"
     #alias_model_components()
