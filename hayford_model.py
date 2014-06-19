@@ -3,8 +3,7 @@
 Mathematical modeling and sensitivity analysis of G2/S phase in the cell cycle
 involving the p53/Mdm2 oscillation system.  Yoshihiko Tashima, Yu Kisaka, 
 Taizo Hanai, Hiroyuki Hamada, Yukihiro Eguchi, Masahiro Okamoto. 
-Proc. Int. Fed. Med. Biomed. Eng., 14 (2006), pp. 195–198
-doi:10.1016/j.biosystems.2008.05.016 "Update"
+
 
 http://www.researchgate.net/publication/226126852_Mathematical_modeling_of_G2M_phase_in_the_cell_cycle_with_involving_the_p53Mdm2_oscillation_system
 
@@ -18,18 +17,21 @@ Implemented by: Corey Hayford
 
 from pysb import *
 from pysb.util import *
-#from macros import *
 from pysb.macros import *
+from pysb.bng import *
+
 
 import pylab as pl
 from pysb.integrate import odesolve
-from sympy import sympify
+from numpy import linspace
+
 
 Model()
 
 def set_dna_damage(damage):
-    #model.parameters()
-    Parameter("DDS", damage)
+    
+    model.parameters['DDS_0'].value = damage
+    #Parameter("DDS", damage)
     
     # "Make all model components visible as symbols in the caller's global namespace"
     #alias_model_components()
@@ -51,96 +53,76 @@ def declare_monomers():
     Monomer("p53")
     Monomer("p21", ['b'])
     
-    Monomer("X14-3-3", ['b'])
+    Monomer("x14_3_3", ['b'])
     Monomer("ATR", ['b'])
     Monomer("Mdm2")
     Monomer("I")
     
     Monomer('Cdc25', ['b', 'state', 'phos'], {'state':['i','a'], 'phos':['u','p']})
     Monomer('MPF' , ['b', 'state'], {'state':['i','a']})
-    """MPF should be split into Cyclin B and CDK1"""
+    #MPF should be split into Cyclin B and CDK1
     
     Monomer('Wee1', ['phos'], {'phos':['u','p']})
     Monomer('Chk1', ['phos'], {'phos':['u','p']})
     
-    """ **Cyclins** """ #MPF Complex
+    # **Cyclins** """ #MPF Complex
     #Monomer("CycB", [        'c'])
     
     
-    """ **Cyclin-dependent kinases** """ #MPF Complex
+    # **Cyclin-dependent kinases** """ #MPF Complex
     #Monomer("CDK1",['phos','b','c'], {'phos':['u','p']})
     
 
 def declare_parameters():
     
-    """Declare Initial Conditions"""
+# ***Declare Initial Conditions***
     
-    Parameter("X1", 1.0e-6)         # Chk1p
-    Parameter("X1pre", 0.9999999)   #Chk1
-    Parameter("X2", 0.2)            #ATR
-    Parameter("X3", 0.0265)         #p53
-    Parameter("X4", 1.0e-6)         #preMPF
-    Parameter("X5", 1.0e-8)         #MPF
-    Parameter("X6", 0.0)            #p21
-    Parameter("X7", 0.0)            #p21/MPF
-    Parameter("X8", 1.0e-6)         #iCdc25
-    Parameter("X9", 2.0e-5)         #iCdc25Ps216
-    Parameter("X10", 0.03)          #iCdc25Ps216/14-3-3
-    Parameter("X11", 1.0e-6)        #aCdc25
-    Parameter("X12", 0.0)           #aCdc25Ps216
-    Parameter("Y13", 1.00e-04)      #p27/CycA/CDK2 (-P)
-    Parameter("X14", 0.001)         #Wee1
-    Parameter("X15", 0.0)           #Wee1p
-    Parameter("X16", 2.35e-4)       #Mdm2
-    Parameter("X17", 0.0)           #I(Intermediate)
-    Parameter("DDS_0")              #DDS
+    Parameter("X1_0", 1.0e-6)         #Chk1p
+    Parameter("X1pre_0", 0.9999999)   #Chk1
+    Parameter("X2_0", 0.2)            #ATR
+    Parameter("X3_0", 0.0265)         #p53
+    Parameter("X4_0", 1.0e-6)         #preMPF
+    Parameter("X5_0", 1.0e-8)         #MPF
+    Parameter("X6_0", 0.0)            #p21
+    Parameter("X7_0", 0.0)            #p21/MPF
+    Parameter("X8_0", 1.0e-6)         #iCdc25
+    Parameter("X9_0", 2.0e-5)         #iCdc25Ps216
+    Parameter("X10_0", 0.03)          #iCdc25Ps216/14-3-3
+    Parameter("X11_0", 1.0e-6)        #aCdc25
+    Parameter("X12_0", 0.0)           #aCdc25Ps216
+    Parameter("X13_0", 0.001)         #x14_3_3
+    Parameter("X14_0", 0.001)         #Wee1
+    Parameter("X15_0", 0.0)           #Wee1p
+    Parameter("X16_0", 2.35e-4)       #Mdm2
+    Parameter("X17_0", 0.0)           #I(Intermediate)
+    Parameter("DDS_0")                #DDS
     
-    Initial(Chk1(phos='p'), X1)                                         #0
-    Initial(Chk1(phos='u'), X1pre)                                      #1
-    Initial(ATR(b=None), X2)                                            #2
-    Initial(p53(), X3)                                                  #3
-    """Initial(preMPF(state='i', b=None), X4)    #4
-       Initial(MPF(state='a', b=None), X5)    #5"""
-    Initial(p21(b=None), X6)                                            #6
-    Initial(p21(b=None) % MPF(b=None, state='a'), X7)                   #7
-    Initial(Cdc25(b=None, state='i', phos= 'u'), X8)                    #8
-    Initial(Cdc25(b=None, state='i', phos='p'), X9)                     #9
-    Initial(Cdc25(b=1, state= 'i', phos= 'p') % X14-3-3(b=1), X10)      #10
-    Initial(Cdc25(b=None, state= 'a', phos= 'u'), X11)                  #11
-    Initial(Cdc25(b=None, state= 'a', phos= 'p'), X12)                  #12
-    Initial(X14-3-3(b=None), X13)                                       #13
-    Initial(Wee1(phos= 'u'), X14)                                       #14
-    Initial(Wee1(phos= 'p'), X15)                                       #15
-    Initial(Mdm2(), X16)                                                #16
-    Initial(I(), X17)                                                   #17
-    Initial(DDS_0(), DDS_off)                                           #18
-    
-    """Declare Kinetic Parameters"""
+# ***Declare Kinetic Parameters***
    
     Parameter("k1", 0.2)
     Parameter("k2", 1.0)
     Parameter("k3", 1.0) 
-    Parameter("k-3", 1.0) 
+    Parameter("km3", 1.0) 
     Parameter("k4", 0.01)  
-    Parameter("k-4", 0.01)
+    Parameter("km4", 0.01)
     Parameter("k5", 1.0)  
-    Parameter("k-5", 0.01)
+    Parameter("km5", 0.01)
     Parameter("k6", 1.0)  
-    Parameter("k-6", 0.01)    
+    Parameter("km6", 0.01)    
     Parameter("k7", 0.01)    
     Parameter("k8", 100.0)   
     Parameter("k9", 0.005)   
     Parameter("k10", 1.0)    
-    Parameter("k-10", 1.0)   
+    Parameter("km10", 1.0)   
     Parameter("k11", 0.1)    
-    Parameter("k-11", 1.0)   
+    Parameter("km11", 1.0)   
     Parameter("k12", 0.01)   
     Parameter("k13", 1.0)    
     Parameter("k14", 0.01)   
     Parameter("k15", 0.1)    
     Parameter("k16", 2.0e-4) 
     Parameter("k17", 0.1)    
-    Parameter("k-17", 1.0)    
+    Parameter("km17", 1.0)    
     Parameter("k18", 1.0)    
     Parameter("k19", 1.0)    
     Parameter("k20", 1.0)    
@@ -163,66 +145,133 @@ def declare_parameters():
     Parameter("n", 9.0)    
     Parameter("k_damp", 0.02) 
     Parameter("k_deg", 0.772) 
-    Parameter("Deg(0)", 0.0566)
+    Parameter("Deg_0", 0.0566)
+    
+# ***Initial Conditions***
+def declare_initial_conditions():
+    
+    Initial(Chk1(phos='p'), X1_0)                                        #0
+    Initial(Chk1(phos='u'), X1pre_0)                                     #1
+    Initial(ATR(b=None), X2_0)                                           #2
+    Initial(p53(), X3_0)                                                 #3
+    Initial(MPF(state='i', b=None), X4_0)                                #4
+    Initial(MPF(state='a', b=None), X5_0)                                #5
+    Initial(p21(b=None), X6_0)                                           #6
+    Initial(p21(b=1) % MPF(b=1, state='a'), X7_0)                  #7
+    Initial(Cdc25(b=None, state='i', phos= 'u'), X8_0)                   #8
+    Initial(Cdc25(b=None, state='i', phos='p'), X9_0)                    #9
+    Initial(Cdc25(b=1, state= 'i', phos= 'p') % x14_3_3(b=1), X10_0)     #10
+    Initial(Cdc25(b=None, state= 'a', phos= 'u'), X11_0)                 #11
+    Initial(Cdc25(b=None, state= 'a', phos= 'p'), X12_0)                 #12
+    Initial(x14_3_3(b=None), X13_0)                                      #13
+    Initial(Wee1(phos= 'u'), X14_0)                                      #14
+    Initial(Wee1(phos= 'p'), X15_0)                                      #15
+    Initial(Mdm2(), X16_0)                                               #16
+    Initial(I(), X17_0)                                                  #17
+    Initial(Signal(), DDS_0)
+                                                 #18
+# ***Observables***
+
+def declare_observables():
+    
+    Observable("OBSaCdc25", Cdc25(b=None, state= 'a', phos= 'u'))
+    Observable("OBSMPF", MPF(b=None, state= 'a'))
+    Observable("OBSp53", p53())
+    Observable("OBSWee1", Wee1(phos= 'u'))
+    
+# ***Rules***
     
 def declare_rules():
     
-    Rule('Signal_Degrade', Signal >> None, k33)
-    Rule('Signal1', Signal >> Signal + ATR(b=None), k1)
-    Rule('Signal2', Signal >> Signal + p53, k34)
-    """Rule('Signal3', Signal >> Signal + I, (k27X3)/(1+k26X3X16))"""
-    Rule('Chk1_Dephos', Chk1(phos= 'p') >> Chk1(phos= 'u'), k-3)
+    Rule('Signal_Degrade', Signal() >> None, k33)
+    Rule('Signal_1', Signal() >> Signal() + ATR(b=None), k1)
+    Rule('Signal_2', Signal() >> Signal() + p53(), k34)
+    #Rule('Signal_3', Signal() >> Signal() + I, (k27X3)/(1+k26X3X16))
+    Rule('Chk1_Dephos', Chk1(phos= 'p') >> Chk1(phos= 'u'), km3)
     Rule('Chk1_Phos', Chk1(phos= 'u') + ATR(b=None) >> Chk1(phos= 'p') + ATR(b=None), k3)
     Rule('iCdc25_Phos', Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos='u') >> Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos= 'p'), k7)
     Rule('aCdc25_Phos', Chk1(phos= 'p') + Cdc25(b=None, state= 'a', phos='u') >> Chk1(phos= 'p') + Cdc25(b=None, state= 'a', phos= 'p'), k4)
     Rule('ATR_Degrade', ATR(b=None) >> None, k2)
-    Rule('p53_Create_Degrade', p53 <> None, k28, k30)
-    Rule('p53_Create_p21', p53 >> p53 + p21(b=None), k15)
-    Rule('p53_Create_X14-3-3', p53 >> p53 + X14-3-3(b=None), k21)
-    """Rule('p53_Create_Mdm2', p53 + Mdm2 >> Mdm2, Deg(0)-kdeg[Signal-Signal_0e^(-kdampSignal_0t)])""" #Fix this!
-    Rule('Create_preMPF', None >> MPF(b=None, state='i'), k9/(1+k31X3))
+    Rule('p53_Create_Degrade', p53() <> None, k30, k28)
+    Rule('p53_Create_p21', p53() >> p53() + p21(b=None), k15)
+    Rule('p53_Create_x14_3_3', p53() >> p53() + x14_3_3(b=None), k21)
+    #Rule('p53_Create_Mdm2', p53() + Mdm2() >> Mdm2(), Deg_0-k_deg[Signal-Signal_0e^(-k_dampSignal_0t)])""" #Fix this!
+    #Rule('Create_preMPF', None >> MPF(b=None, state='i'), k9/(1+k31X3))
     Rule('Activate_MPF1', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='u') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='u'), k10) #With unphosphorylated aCdc25
     Rule('Activate_MPF2', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='p') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='p'), k10) #With phosphorylated aCdc25
-    Rule('Inactivate_MPF', MPF(b=None, state='a') + Wee1(phos='u') >> MPF(b=None, state='i') + Wee1(phos='u'), k-10)
+    Rule('Inactivate_MPF', MPF(b=None, state='a') + Wee1(phos='u') >> MPF(b=None, state='i') + Wee1(phos='u'), km10)
     Rule('Degrade_MPF', MPF(b=None, state='a') + MPF(b=None, state='a') >> None, k12)
-    Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) <> MPF(b=1, state= 'i') % p21(b=1), k11, k-11)
+    Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) <> MPF(b=1, state= 'a') % p21(b=1), k11, km11)
     Rule('Activate_Cdc25', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'u') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'u'), k5)
     Rule('Acitvate_Cdc25Ps216', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'p') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'p'), k6)
-    Rule('Phosphorylate_Wee1', MPF(b=None, state= 'a') + Wee1(phos= 'u') >> MPF(b=None, state= 'a') + Wee1(phos= 'p'), k17)
-    Rule('Create_p21', None <> p21(b=None), k14, k13)
+    Rule('Wee1_Phos', MPF(b=None, state= 'a') + Wee1(phos= 'u') >> MPF(b=None, state= 'a') + Wee1(phos= 'p'), k17)
+    Rule('Create_p21', None <> p21(b=None), k13, k14)
     Rule('Create_iCdc25', None >> Cdc25(b=None, state= 'i', phos= 'u'), v_in)
-    Rule('Inactivate_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> Cdc25(b=None, state= 'i', phos= 'u'), k-5)
-    Rule('Complex_iCdc25Ps216_X14-3-3', Cdc25(b=None, state= 'i', phos= 'p') + X14-3-3(b=None) >> Cdc25(b=1, state= 'i', phos= 'p') % X14-3-3(b=1), k8)
-    Rule('Inactive_Cdc25Ps216', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'i', phos= 'p'), k-6)
-    Rule('Degrade_Complex_iCdc25Ps216_X14-3-3', Cdc25(b=1, state= 'i', phos= 'p') % X14-3-3(b=1) >> None, k_ex)
+    Rule('Inactivate_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> Cdc25(b=None, state= 'i', phos= 'u'), km5)
+    Rule('Complex_iCdc25Ps216_x14_3_3', Cdc25(b=None, state= 'i', phos= 'p') + x14_3_3(b=None) >> Cdc25(b=1, state= 'i', phos= 'p') % x14_3_3(b=1), k8)
+    Rule('Inactive_Cdc25Ps216', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'i', phos= 'p'), km6)
+    Rule('Degrade_Complex_iCdc25Ps216_x14_3_3', Cdc25(b=1, state= 'i', phos= 'p') % x14_3_3(b=1) >> None, k_ex)
     Rule('Degrade_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> None, k32)
-    Rule('Dephosphorylate_aCdc25Ps216', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'a', phos= 'u'), k-4)
-    Rule('Create_Degrade_X14-3-3', None <> X14-3-3(b=None), k20, k19)
+    Rule('aCdc25Ps216_Dephos', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'a', phos= 'u'), km4)
+    Rule('Create_Degrade_x14_3_3', None <> x14_3_3(b=None), k19, k20)
     Rule('Create_Wee1', None >> Wee1(phos='u'), k16)
-    Rule('Dephosphorylate_ Wee1', Wee1(phos= 'p') >> Wee1(phos= 'u'), k-17)
+    Rule('Wee1_Dephos', Wee1(phos= 'p') >> Wee1(phos= 'u'), km17)
     Rule('Degrade_Wee1p', Wee1(phos= 'p') >> None, k18)
-    Rule('Create_Degrade_Mdm2', None <> Mdm2, k22, k23)
-    """Rule('Create_Mdm2', None >> Mdm2, (k24X^n_17) / (k^n_m + X^n_17))"""
-    Rule('Degrade_Intermediate', I >> None, k25)
+    Rule('Create_Degrade_Mdm2', None <> Mdm2(), k23, k22)
+    #Rule('Create_Mdm2', None >> Mdm2(), (k24X^n_17) / (k^n_m + X^n_17))
+    Rule('Degrade_Intermediate', I() >> None, k25)
+        
+# ***Generate ODEs and Plot***
+
+declare_monomers()
+declare_parameters()
+declare_initial_conditions()
+declare_observables()
+declare_rules()
+set_dna_damage = 0.005
+
+generate_equations(model, verbose=True)
+
+
+
+t = pl.linspace(0,4000, 4000)
+print t
+print len(t)
+
+for monomers in model.monomers:
+    print monomers
     
-    
-"""Observables"""
-    
-    
-Observable("OBSaCdc25", Cdc25(b=None, state= 'a', phos= 'u'))
-#Observable("OBSMPF", MPF(b=None, state= 'a'))
-Observable("OBSp53", p53())
-Observable("OBSWee1", Wee1(phos= 'u'))
-    
-"""Generate ODEs and Plot"""
-    
-t = pl.linspace(0,3000, num = 300)
-y = odesolve(m.model,t)
-    
-t = pl.linspace(0,3000, num = 300)
-y = odesolve(m.model,t)
-    
-pl.ion()
+print
+
+for parameters in model.parameters:
+    print parameters
+print
+
+for initial_conditions in model.initial_conditions:
+    print initial_conditions
+print
+
+for observables in model.observables:
+    print observables
+print
+
+for rules in model.rules:
+    print rules
+print
+
+for odes in model.odes:
+    print odes
+
+
+
+
+y = odesolve(model,t, verbose=True)
+
+for obs in model.observables:
+    pl.plot(t, y[str(obs)], label=str(obs))
+
+pl.legend(loc='upper left')
+pl.show()
 pl.figure()
     
 
