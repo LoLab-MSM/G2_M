@@ -243,7 +243,7 @@ t = pl.linspace(0,4000, 4000)
 print t
 print len(t)
 
-quit()
+
 
 for monomers in model.monomers:
     print monomers
