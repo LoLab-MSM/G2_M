@@ -11,7 +11,7 @@ http://www.researchgate.net/publication/226126852_Mathematical_modeling_of_G2M_p
 
 Implemented by: Corey Hayford
 """
-from hayford_model import *
+from hayford_model_modified_parameters import *
 from pysb import *
 from pysb.util import *
 from pysb.macros import *
@@ -173,7 +173,7 @@ declare_functions()
 declare_rules()
 print model.parameters['k3'].value
 
-set_volume(1.0e-21)
+set_volume(1.0e-20)
 print model.parameters['k3'].value
 print model.rules['Chk1_Phos']
 print model.rules['Chk1_Phos'].rate_forward.value
@@ -242,10 +242,18 @@ pl.figure()
 for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
     pl.plot(t, y[obs], label=obs)
 pl.legend(loc='upper right')
+pl.xlabel("Time (arbitrary units)")
+pl.ylabel("Protein Level")
+pl.title("Protein Dynamics (No DNA Damage)")
+pl.savefig("Stochastic G2-M Cell Cycle No DNA Damage1.png", format= "png")
 
 pl.figure()
 pl.plot(t, y["OBS_aCdc25"], label="OBS_aCdc25")
 pl.legend(loc='upper left')
+pl.xlabel("Time (arbitrary units)")
+pl.ylabel("Protein Level (Active Cdc25)")
+pl.title("Protein Dynamics (No DNA Damage)")
+pl.savefig("Stochastic G2-M Cell Cycle No DNA Damage2.png", format= "png")
 
 #####
 set_dna_damage(0.005 * Na_V)
@@ -255,10 +263,18 @@ pl.figure()
 for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
     pl.plot(t, y[obs], label=obs)
 pl.legend(loc='upper right')
+pl.xlabel("Time (arbitrary units)")
+pl.ylabel("Protein Level")
+pl.title("Protein Dynamics (DNA Damage = 0.005)")
+pl.savefig("Stochastic G2-M Cell Cycle DNA Damage1.png", format= "png")
 
 pl.figure()
 pl.plot(t, y["OBS_aCdc25"], label="OBS_aCdc25")
 pl.legend(loc='upper left')
+pl.xlabel("Time (arbitrary units)")
+pl.ylabel("Protein Level (Active Cdc25)")
+pl.title("Protein Dynamics (DNA Damage = 0.005)")
+pl.savefig("Stochastic G2-M Cell Cycle DNA Damage2.png", format= "png")
 
 pl.show()    
 

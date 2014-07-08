@@ -3,6 +3,8 @@
 Mathematical modeling and sensitivity analysis of G2/S phase in the cell cycle
 involving the p53/Mdm2 oscillation system.  Yoshihiko Tashima, Yu Kisaka, 
 Taizo Hanai, Hiroyuki Hamada, Yukihiro Eguchi, Masahiro Okamoto. 
+Proc. Int. Fed. Med. Biomed. Eng., 14(2006), pp.195-198
+doi:10.1016/j.biosystems.2008.05.016 "Update"
 
 
 http://www.researchgate.net/publication/226126852_Mathematical_modeling_of_G2M_phase_in_the_cell_cycle_with_involving_the_p53Mdm2_oscillation_system
@@ -33,8 +35,8 @@ def declare_monomers():
     'p' is the phosphorylated monomer
     'b' is the binding site between p## and other proteins"""
     
-    Monomer("Signal")   #State can be on or off
-    Monomer("SignalDamp")
+    Monomer("Signal")       #State can be on or off
+    Monomer("SignalDamp")   #Dampens signal in Deg(t) function
         
     # **Regulatory proteins**
      
@@ -77,7 +79,7 @@ def declare_parameters():
     Parameter("X10_0", 0.03)          #iCdc25Ps216/14-3-3
     Parameter("X11_0", 1.0e-6)        #aCdc25
     Parameter("X12_0", 0.0)           #aCdc25Ps216
-    Parameter("X13_0", 2.0) #0.001)         #x14_3_3
+    Parameter("X13_0", 2.0)           #x14_3_3
     Parameter("X14_0", 0.001)         #Wee1
     Parameter("X15_0", 0.0)           #Wee1p
     Parameter("X16_0", 2.35e-4)       #Mdm2
@@ -86,10 +88,10 @@ def declare_parameters():
     
 # ***Declare Kinetic Parameters***
    
-    Parameter("k1", 0.2)
-    Parameter("k2", 1.0)
-    Parameter("k3", 1.0) 
-    Parameter("km3", 1.0) 
+    Parameter("k1", 0.2)    #1/t
+    Parameter("k2", 1.0)    #1/t
+    Parameter("k3", 1.0)    #1/([]*t)
+    Parameter("km3", 1.0)   #1/t
     Parameter("k4", 0.01)  
     Parameter("km4", 0.01)
     Parameter("k5", 1.0)  
@@ -98,7 +100,7 @@ def declare_parameters():
     Parameter("km6", 0.01)    
     Parameter("k7", 0.01)    
     Parameter("k8", 100.0)   
-    Parameter("k9", 0.0005) #0.005)   
+    Parameter("k9", 0.0005)   
     Parameter("k10", 1.0)    
     Parameter("km10", 1.0)   
     Parameter("k11", 0.1)    
@@ -118,14 +120,14 @@ def declare_parameters():
     Parameter("k23", 0.02)    
     Parameter("k24", 10.0)   
     Parameter("k25", 0.005)  
-    Parameter("k26", 0.004)  
-    Parameter("k27", 6.0)    
+    Parameter("k26", 0.004) #1/[]^2  
+    Parameter("k27", 6.0)   #1/([]*t)
     Parameter("k28", 0.0001)    
     Parameter("k30", 0.001)     
     Parameter("k31", 1.0)    
     Parameter("k32", 0.0001) 
-    Parameter("k33", 1e-8) #1.0e8)  
-    Parameter("k34", 1.5)    
+    Parameter("k33", 1e-8)  #1/t
+    Parameter("k34", 1.5)   #1/t
     Parameter("k_ex", 1.0)    
     Parameter("v_in", 1.0e-5)   
     Parameter("k_m", 9.5)    
@@ -171,6 +173,8 @@ def declare_observables():
     Observable("signal", Signal())
     Observable("signal_damp", SignalDamp())
     
+# ***Functions***
+#    Developed by Leonard Harris - modified pysb in lharris branch to process functions
 def declare_functions():
     
     Expression("create_preMPF", sympify("k9/(1 + k31*OBS_p53)"))
@@ -183,14 +187,18 @@ def declare_functions():
 def declare_rules():
     
     Rule('Signal_Degrade', Signal() >> None, k33)
-    #####
+    
+    ##### Function
     Rule('Signal_Damp', SignalDamp() >> None, kdamp_DDS0)
     #####
+    
     Rule('Signal_1', Signal() >> Signal() + ATR(b=None), k1)
     Rule('Signal_2', Signal() >> Signal() + p53(), k34)
-    #####
+    
+    ##### Function
     Rule('Signal_3', Signal() >> Signal() + I(), create_intermediate)
     #####
+    
     Rule('Chk1_Dephos', Chk1(phos= 'p') >> Chk1(phos= 'u'), km3)
     Rule('Chk1_Phos', Chk1(phos= 'u') + ATR(b=None) >> Chk1(phos= 'p') + ATR(b=None), k3)
     Rule('iCdc25_Phos', Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos='u') >> Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos= 'p'), k7)
@@ -200,16 +208,25 @@ def declare_rules():
     Rule('p53_Degrade', p53() >> None, k30)
     Rule('p53_Create_p21', p53() >> p53() + p21(b=None), k15)
     Rule('p53_Create_x14_3_3', p53() >> p53() + x14_3_3(b=None), k21)
-    #####
+    
+    ##### Functions
     Rule('p53_Create_Mdm2', p53() + Mdm2() >> Mdm2(), sig_deg)
     Rule('Create_preMPF', None >> MPF(b=None, state='i'), create_preMPF) 
     #####
-    Rule('Activate_MPF1', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='u') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='u'), k10) #With unphosphorylated aCdc25
-    Rule('Activate_MPF2', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='p') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='p'), k10) #With phosphorylated aCdc25
+    
+    Rule('Activate_MPF', MPF(b=None, state='i') + Cdc25(b=None, state='a') >> MPF(b=None, state='a') + Cdc25(b=None, state='a'), k10) #Removed 'phos' from Activate_MPF1/2
+    
+#     Rule('Activate_MPF1', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='u') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='u'), k10) #With unphosphorylated aCdc25
+#     Rule('Activate_MPF2', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='p') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='p'), k10) #With phosphorylated aCdc25
+    
     Rule('Inactivate_MPF', MPF(b=None, state='a') + Wee1(phos='u') >> MPF(b=None, state='i') + Wee1(phos='u'), km10)
     Rule('Degrade_MPF', MPF(b=None, state='a') + MPF(b=None, state='a') >> None, k12)
-    Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) >> MPF(b=1, state= 'a') % p21(b=1), k11)
-    Rule('Decomplex_MPF_p21', MPF(b=1, state= 'a') % p21(b=1) >> MPF(b=None, state='a') + p21(b=None), km11)
+    
+    Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) <> MPF(b=1, state= 'a') % p21(b=1), k11, km11)
+    
+#     Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) >> MPF(b=1, state= 'a') % p21(b=1), k11)
+#     Rule('Decomplex_MPF_p21', MPF(b=1, state= 'a') % p21(b=1) >> MPF(b=None, state='a') + p21(b=None), km11)
+
     Rule('Activate_Cdc25', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'u') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'u'), k5)
     Rule('Acitvate_Cdc25Ps216', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'p') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'p'), k6)
     Rule('Wee1_Phos', MPF(b=None, state= 'a') + Wee1(phos= 'u') >> MPF(b=None, state= 'a') + Wee1(phos= 'p'), k17)
@@ -229,90 +246,10 @@ def declare_rules():
     Rule('Degrade_Wee1p', Wee1(phos= 'p') >> None, k18)
     Rule('Create_Mdm2', None >> Mdm2(), k22)
     Rule('Degrade_Mdm2', Mdm2() >> None, k23)
-    ####
+    
+    ##### Function
     Rule('Create_Mdm2_Hill', None >> Mdm2(), Hill_Mdm2)
     ####
+    
     Rule('Degrade_Intermediate', I() >> None, k25)
-        
-# ***Generate ODEs and Plot***
-
-declare_monomers()
-declare_parameters()
-declare_initial_conditions()
-declare_observables()
-declare_functions()
-declare_rules()
-
-# set_dna_damage(0.005)
-
-# generate_equations(model, verbose=True)
-# 
-# for monomers in model.monomers:
-#     print monomers
-# print
-# 
-# for parameters in model.parameters:
-#     print parameters
-# print
-# 
-# for initial_conditions in model.initial_conditions:
-#     print initial_conditions
-# print
-# 
-# for obs in model.observables:
-#     print obs, ":", obs.species, ",", obs.coefficients
-#     obs_string = ''
-#     for i in range(len(obs.coefficients)):
-#         if i > 0: obs_string += " + "
-#         obs_string += "__s"+str(obs.species[i])
-#         if obs.coefficients[i] > 1:
-#             obs_string += "*"+str(obs.coefficients[i])
-#     print obs_string
-# 
-# for rules in model.rules:
-#     print rules
-# print
-# 
-# for i in range(len(model.species)):
-#     print str(i)+":", model.species[i]
-# print
-# 
-# for i in range(len(model.odes)):
-#     print str(i)+":", model.odes[i]
-# print
-# 
-# from pysb.generator.bng import BngGenerator
-# print BngGenerator(model).get_content()
-
-# quit()
-
-t = linspace(0,4000,4000)
-
-#####
-set_dna_damage(0.0)
-y = odesolve(model,t,verbose=True)
-
-pl.figure()
-for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
-    pl.plot(t, y[obs], label=obs)
-pl.legend(loc='upper right')
-
-pl.figure()
-pl.plot(t, y["OBS_aCdc25"], label="OBS_aCdc25")
-pl.legend(loc='upper left')
-
-#####
-set_dna_damage(0.005)
-y = odesolve(model,t,verbose=True)
-
-pl.figure()
-for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
-    pl.plot(t, y[obs], label=obs)
-pl.legend(loc='upper right')
-
-pl.figure()
-pl.plot(t, y["OBS_aCdc25"], label="OBS_aCdc25")
-pl.legend(loc='upper left')
-
-pl.show()    
-
+    
