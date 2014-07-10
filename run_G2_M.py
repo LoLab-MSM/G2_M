@@ -1,4 +1,4 @@
-from hayford_model import *
+from G2_M_v2 import *
 from pysb import *
 from pysb.util import *
 from pysb.macros import *
@@ -9,8 +9,9 @@ from numpy import linspace
 from sympy import sympify
 
 # ***Generate ODEs and Plot***
-import os 
-print os.getcwd()
+
+# import os 
+# print os.getcwd()
 # quit()
 
 declare_monomers()
@@ -19,8 +20,6 @@ declare_initial_conditions()
 declare_observables()
 declare_functions()
 declare_rules()
-
-
      
 generate_equations(model, verbose=True)
   
@@ -50,34 +49,33 @@ generate_equations(model, verbose=True)
 #     print rules
 # print
 #  
-for i in range(len(model.species)):
-    print str(i)+":", model.species[i]
-print
- 
-for i in range(len(model.odes)):
-    print str(i)+":", model.odes[i]
-print
-
-for x in model.parameters_initial_conditions():
-    print x, ":", x.value
-print 
-print
-
-for x in model.parameters_unused():
-    print x, ":", x.value
-print 
-
-for x in model.parameters_rules():
-    print x
-    
-quit()
- 
-from pysb.generator.bng import BngGenerator
-print BngGenerator(model).get_content()
+# for i in range(len(model.species)):
+#     print str(i)+":", model.species[i]
+# print
+#  
+# for i in range(len(model.odes)):
+#     print str(i)+":", model.odes[i]
+# print
+# 
+# for x in model.parameters_initial_conditions():
+#     print x, ":", x.value
+# print 
+# 
+# for x in model.parameters_unused():
+#     print x, ":", x.value
+# print 
+# 
+# for x in model.parameters_rules():
+#     print x
+#    
+# quit()
+#  
+# from pysb.generator.bng import BngGenerator
+# print BngGenerator(model).get_content()
 
 t = linspace(0,4000,4000) 
  
-#####
+## ** Set No DNA Damage **
 set_dna_damage(0.0)
 y = odesolve(model,t,verbose=True)
  
@@ -98,7 +96,7 @@ pl.ylabel("Protein Level (Active Cdc25)")
 pl.title("Protein Dynamics (No DNA Damage)")
 pl.savefig("G2-M Cell Cycle No DNA Damage2.png", format= "png")
 
-#####
+## ** Set DNA Damage **
 set_dna_damage(0.005)
 y = odesolve(model,t,verbose=True)
  
@@ -119,5 +117,4 @@ pl.ylabel("Protein Level (Active Cdc25)")
 pl.title("Protein Dynamics (DNA Damage = 0.005)")
 pl.savefig("G2-M Cell Cycle DNA Damage2.png", format= "png")
 
-pl.show()    
-
+pl.show()

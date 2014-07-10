@@ -88,10 +88,10 @@ def declare_parameters():
     
 # ***Declare Kinetic Parameters***
    
-    Parameter("k1", 0.2)    #1/t
-    Parameter("k2", 1.0)    #1/t
-    Parameter("k3", 1.0)    #1/([]*t)
-    Parameter("km3", 1.0)   #1/t
+    Parameter("k1", 0.2)    
+    Parameter("k2", 1.0)    
+    Parameter("k3", 1.0)    
+    Parameter("km3", 1.0)   
     Parameter("k4", 0.01)  
     Parameter("km4", 0.01)
     Parameter("k5", 1.0)  
@@ -120,14 +120,14 @@ def declare_parameters():
     Parameter("k23", 0.02)    
     Parameter("k24", 10.0)   
     Parameter("k25", 0.005)  
-    Parameter("k26", 0.004) #1/[]^2  
-    Parameter("k27", 6.0)   #1/([]*t)
+    Parameter("k26", 0.004) 
+    Parameter("k27", 6.0)   
     Parameter("k28", 0.0001)    
     Parameter("k30", 0.001)     
     Parameter("k31", 1.0)    
     Parameter("k32", 0.0001) 
-    Parameter("k33", 1e-8)  #1/t
-    Parameter("k34", 1.5)   #1/t
+    Parameter("k33", 1e-8)  
+    Parameter("k34", 1.5)   
     Parameter("k_ex", 1.0)    
     Parameter("v_in", 1.0e-5)   
     Parameter("k_m", 9.5)    
@@ -185,20 +185,17 @@ def declare_functions():
     
 # ***Rules***
 def declare_rules():
-    
-    Rule('Signal_Degrade', Signal() >> None, k33)
-    
-    ##### Function
+    ## ** Functions **
     Rule('Signal_Damp', SignalDamp() >> None, kdamp_DDS0)
-    #####
+    Rule('p53_Create_Mdm2', p53() + Mdm2() >> Mdm2(), sig_deg)
+    Rule('Create_preMPF', None >> MPF(b=None, state='i'), create_preMPF) 
+    Rule('Create_Mdm2_Hill', None >> Mdm2(), Hill_Mdm2)
+    Rule('Signal_3', Signal() >> Signal() + I(), create_intermediate)
+    ##
     
     Rule('Signal_1', Signal() >> Signal() + ATR(b=None), k1)
     Rule('Signal_2', Signal() >> Signal() + p53(), k34)
-    
-    ##### Function
-    Rule('Signal_3', Signal() >> Signal() + I(), create_intermediate)
-    #####
-    
+    Rule('Signal_Degrade', Signal() >> None, k33)
     Rule('Chk1_Dephos', Chk1(phos= 'p') >> Chk1(phos= 'u'), km3)
     Rule('Chk1_Phos', Chk1(phos= 'u') + ATR(b=None) >> Chk1(phos= 'p') + ATR(b=None), k3)
     Rule('iCdc25_Phos', Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos='u') >> Chk1(phos= 'p') + Cdc25(b=None, state= 'i', phos= 'p'), k7)
@@ -208,12 +205,6 @@ def declare_rules():
     Rule('p53_Degrade', p53() >> None, k30)
     Rule('p53_Create_p21', p53() >> p53() + p21(b=None), k15)
     Rule('p53_Create_x14_3_3', p53() >> p53() + x14_3_3(b=None), k21)
-    
-    ##### Functions
-    Rule('p53_Create_Mdm2', p53() + Mdm2() >> Mdm2(), sig_deg)
-    Rule('Create_preMPF', None >> MPF(b=None, state='i'), create_preMPF) 
-    #####
-    
     Rule('Activate_MPF', MPF(b=None, state='i') + Cdc25(b=None, state='a') >> MPF(b=None, state='a') + Cdc25(b=None, state='a'), k10) #Removed 'phos' from Activate_MPF1/2
     
 #     Rule('Activate_MPF1', MPF(b=None, state='i') + Cdc25(b=None, state='a', phos='u') >> MPF(b=None, state='a') + Cdc25(b=None, state='a', phos='u'), k10) #With unphosphorylated aCdc25
@@ -221,12 +212,11 @@ def declare_rules():
     
     Rule('Inactivate_MPF', MPF(b=None, state='a') + Wee1(phos='u') >> MPF(b=None, state='i') + Wee1(phos='u'), km10)
     Rule('Degrade_MPF', MPF(b=None, state='a') + MPF(b=None, state='a') >> None, k12)
-    
     Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) <> MPF(b=1, state= 'a') % p21(b=1), k11, km11)
     
 #     Rule('Complex_MPF_p21', MPF(b=None, state='a') + p21(b=None) >> MPF(b=1, state= 'a') % p21(b=1), k11)
 #     Rule('Decomplex_MPF_p21', MPF(b=1, state= 'a') % p21(b=1) >> MPF(b=None, state='a') + p21(b=None), km11)
-
+    
     Rule('Activate_Cdc25', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'u') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'u'), k5)
     Rule('Acitvate_Cdc25Ps216', MPF(b=None, state='a') + Cdc25(b=None, state= 'i', phos= 'p') >> MPF(b=None, state= 'a') + Cdc25(b=None, state= 'a', phos= 'p'), k6)
     Rule('Wee1_Phos', MPF(b=None, state= 'a') + Wee1(phos= 'u') >> MPF(b=None, state= 'a') + Wee1(phos= 'p'), k17)
@@ -246,10 +236,4 @@ def declare_rules():
     Rule('Degrade_Wee1p', Wee1(phos= 'p') >> None, k18)
     Rule('Create_Mdm2', None >> Mdm2(), k22)
     Rule('Degrade_Mdm2', Mdm2() >> None, k23)
-    
-    ##### Function
-    Rule('Create_Mdm2_Hill', None >> Mdm2(), Hill_Mdm2)
-    ####
-    
     Rule('Degrade_Intermediate', I() >> None, k25)
-    
