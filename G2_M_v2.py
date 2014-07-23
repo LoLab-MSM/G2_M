@@ -197,17 +197,17 @@ def declare_functions():
 def declare_rules():
     ## ** Functions **
     Rule('Signal_Damp', SignalDamp() >> None, kdamp_DDS0)
-    Rule('p53_Create_Mdm2', p53() + Mdm2() >> Mdm2(), sig_deg)
+    Rule('Mdm2_Degrade_p53', p53() + Mdm2() >> Mdm2(), sig_deg)
     
     Rule('Create_preMPF', None >> CycB(c=1) % CDK1(phos='u',b=None,c=1), create_preMPF)
 #     Rule('Create_preMPF', None >> MPF(b=None, state='i'), create_preMPF) 
 
     Rule('Create_Mdm2_Hill', None >> Mdm2(), Hill_Mdm2)
-    Rule('Signal_3', Signal() >> Signal() + I(), create_intermediate)
+    Rule('Signal_Create_I', Signal() >> Signal() + I(), create_intermediate)
     ## ** End Functions **
     
-    Rule('Signal_1', Signal() >> Signal() + ATR(b=None), k1)
-    Rule('Signal_2', Signal() >> Signal() + p53(), k34)
+    Rule('Signal_Create_ATR', Signal() >> Signal() + ATR(b=None), k1)
+    Rule('Signal_Create_p53', Signal() >> Signal() + p53(), k34)
     Rule('Signal_Degrade', Signal() >> None, k33)
     Rule('Chk1_Dephos', Chk1(phos= 'p') >> Chk1(phos= 'u'), km3)
     Rule('Chk1_Phos', Chk1(phos= 'u') + ATR(b=None) >> Chk1(phos= 'p') + ATR(b=None), k3)
@@ -222,10 +222,9 @@ def declare_rules():
     Rule('Activate_MPF', CycB(c=1) % CDK1(phos='u',b=None,c=1) + Cdc25(b=None, state='a') >> CycB(c=1) % CDK1(phos='p',b=None,c=1) + Cdc25(b=None, state='a'), k10) 
     Rule('Inactivate_MPF', CycB(c=1) % CDK1(phos='p',b=None,c=1) + Wee1(phos='u') >> CycB(c=1) % CDK1(phos='u',b=None,c=1) + Wee1(phos='u'), km10)
     Rule('Degrade_MPF', CycB(c=1) % CDK1(phos='p',b=None,c=1) + CycB(c=1) % CDK1(phos='p',b=None,c=1) >> None, k12)
-    Rule('Complex_MPF_p21', CycB(c=1) % CDK1(phos='p',b=None,c=1) + p21(b=None) <> CycB(c=2) % CDK1(phos='u',b=1,c=2) % p21(b=1), k11, km11)  
+    Rule('Complex_MPF_p21', CycB(c=1) % CDK1(phos='p',b=None,c=1) + p21(b=None) <> CycB(c=1) % CDK1(phos='u',b=2,c=1) % p21(b=2), k11, km11)  
     Rule('Activate_Cdc25', CycB(c=1) % CDK1(phos='p',b=None,c=1) + Cdc25(b=None, state= 'i', phos= 'u') >> CycB(c=1) % CDK1(phos='p',b=None,c=1) + Cdc25(b=None, state= 'a', phos= 'u'), k5)
     Rule('Acitvate_Cdc25Ps216', CycB(c=1) % CDK1(phos='p',b=None,c=1) + Cdc25(b=None, state= 'i', phos= 'p') >> CycB(c=1) % CDK1(phos='p',b=None,c=1) + Cdc25(b=None, state= 'a', phos= 'p'), k6)
-    Rule('Wee1_Phos', CycB(c=1) % CDK1(phos='p',b=None,c=1) + Wee1(phos= 'u') >> CycB(c=1) % CDK1(phos='p',b=None,c=1) + Wee1(phos= 'p'), k17)
     
 #     Rule('Activate_MPF', MPF(b=None, state='i') + Cdc25(b=None, state='a') >> MPF(b=None, state='a') + Cdc25(b=None, state='a'), k10) #Removed 'phos' from Activate_MPF1/2
 #     Rule('Inactivate_MPF', MPF(b=None, state='a') + Wee1(phos='u') >> MPF(b=None, state='i') + Wee1(phos='u'), km10)
@@ -238,15 +237,16 @@ def declare_rules():
     Rule('Create_p21', None >> p21(b=None), k14)
     Rule('Degrade_p21', p21(b=None) >> None, k13)
     Rule('Create_iCdc25', None >> Cdc25(b=None, state= 'i', phos= 'u'), v_in)
-    Rule('Inactivate_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> Cdc25(b=None, state= 'i', phos= 'u'), km5)
+    Rule('Deactivate_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> Cdc25(b=None, state= 'i', phos= 'u'), km5)
     Rule('Complex_iCdc25Ps216_x14_3_3', Cdc25(b=None, state= 'i', phos= 'p') + x14_3_3(b=None) >> Cdc25(b=1, state= 'i', phos= 'p') % x14_3_3(b=1), k8)
-    Rule('Inactive_Cdc25Ps216', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'i', phos= 'p'), km6)
+    Rule('Deactivate_Cdc25Ps216', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'i', phos= 'p'), km6)
     Rule('Degrade_Complex_iCdc25Ps216_x14_3_3', Cdc25(b=1, state= 'i', phos= 'p') % x14_3_3(b=1) >> None, k_ex)
     Rule('Degrade_aCdc25', Cdc25(b=None, state= 'a', phos= 'u') >> None, k32)
     Rule('aCdc25Ps216_Dephos', Cdc25(b=None, state= 'a', phos= 'p') >> Cdc25(b=None, state= 'a', phos= 'u'), km4)
     Rule('Create_x14_3_3', None >> x14_3_3(b=None), k20)
     Rule('Degrade_x14_3_3', x14_3_3(b=None) >> None, k19)
     Rule('Create_Wee1', None >> Wee1(phos='u'), k16)
+    Rule('Wee1_Phos', CycB(c=1) % CDK1(phos='p',b=None,c=1) + Wee1(phos= 'u') >> CycB(c=1) % CDK1(phos='p',b=None,c=1) + Wee1(phos= 'p'), k17)
     Rule('Wee1_Dephos', Wee1(phos= 'p') >> Wee1(phos= 'u'), km17)
     Rule('Degrade_Wee1p', Wee1(phos= 'p') >> None, k18)
     Rule('Create_Mdm2', None >> Mdm2(), k22)
