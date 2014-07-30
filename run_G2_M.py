@@ -7,6 +7,7 @@ from pysb.integrate import odesolve
 import pylab as pl
 from numpy import linspace
 from sympy import sympify
+import re
 
 # ***Generate ODEs and Plot***
 
@@ -78,7 +79,7 @@ generate_equations(model, verbose=True)
 #  
 # from pysb.generator.bng import BngGenerator
 # print BngGenerator(model).get_content()
-import re
+
 
 t = linspace(0,4000,4000) 
  
@@ -89,20 +90,22 @@ y = odesolve(model,t,verbose=True)
 pl.figure()
 for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
     pl.plot(t, y[obs], label=re.match(r"OBS_(\w+)", obs).group(1), linewidth=3)
-pl.legend(loc='upper right')
-pl.xlabel("Time (arbitrary units)", fontsize=18)
-pl.ylabel("Protein Level", fontsize=18)
-pl.xticks(fontsize=16)
-pl.yticks(fontsize=16)
-pl.title("Protein Dynamics (No DNA Damage)")
+pl.legend(loc='upper right', prop={'size': 16})
+pl.xlabel("Time (arbitrary units)", fontsize=22)
+pl.ylabel("Protein Level", fontsize=22)
+pl.xticks(fontsize=18)
+pl.yticks(fontsize=18)
+pl.title("Protein Dynamics (No DNA Damage)", fontsize=22)
 pl.savefig("G2-M Cell Cycle No DNA Damage1.png", format= "png")
 
 pl.figure()
-pl.plot(t, y["OBS_aCdc25"], label="aCdc25")
-pl.legend(loc='upper left')
-pl.xlabel("Time (arbitrary units)")
-pl.ylabel("Protein Level (Active Cdc25)")
-pl.title("Protein Dynamics (No DNA Damage)")
+pl.plot(t, y["OBS_aCdc25"], label="aCdc25", linewidth=3)
+pl.legend(loc='upper left', prop={'size': 16})
+pl.xlabel("Time (arbitrary units)", fontsize=22)
+pl.ylabel("Protein Level (Active Cdc25)", fontsize=22)
+pl.xticks(fontsize=18)
+pl.yticks(fontsize=18)
+pl.title("Protein Dynamics (No DNA Damage)", fontsize=22)
 pl.savefig("G2-M Cell Cycle No DNA Damage2.png", format= "png")
 
 ## ** Set DNA Damage **
@@ -111,19 +114,23 @@ y = odesolve(model,t,verbose=True)
  
 pl.figure()
 for obs in ["OBS_MPF", "OBS_p53", "OBS_Wee1"]:
-    pl.plot(t, y[obs], label=re.match(r"OBS_(\w+)", obs).group(1))
-pl.legend(loc='upper right')
-pl.xlabel("Time (arbitrary units)")
-pl.ylabel("Protein Level")
-pl.title("Protein Dynamics (DNA Damage = 0.005)")
+    pl.plot(t, y[obs], label=re.match(r"OBS_(\w+)", obs).group(1), linewidth=3)
+pl.legend(loc='upper right', prop={'size': 16})
+pl.xlabel("Time (arbitrary units)", fontsize=22)
+pl.ylabel("Protein Level", fontsize=22)
+pl.xticks(fontsize=18)
+pl.yticks(fontsize=18)
+pl.title("Protein Dynamics (DNA Damage = 0.005)", fontsize=22)
 pl.savefig("G2-M Cell Cycle DNA Damage1.png", format= "png")
  
 pl.figure()
-pl.plot(t, y["OBS_aCdc25"], label="aCdc25")
-pl.legend(loc='upper left')
-pl.xlabel("Time (arbitrary units)")
-pl.ylabel("Protein Level (Active Cdc25)")
-pl.title("Protein Dynamics (DNA Damage = 0.005)")
+pl.plot(t, y["OBS_aCdc25"], label="aCdc25", linewidth=3)
+pl.legend(loc='upper left', prop={'size': 16})
+pl.xlabel("Time (arbitrary units)", fontsize=22)
+pl.ylabel("Protein Level (Active Cdc25)", fontsize=22)
+pl.xticks(fontsize=18)
+pl.yticks(fontsize=18)
+pl.title("Protein Dynamics (DNA Damage = 0.005)", fontsize=22)
 pl.savefig("G2-M Cell Cycle DNA Damage2.png", format= "png")
 
 pl.show()
