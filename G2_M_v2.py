@@ -22,9 +22,12 @@ from sympy import sympify
 
 # Model()
 
-# def set_dna_damage(damage):
-#     model.parameters['DDS_0'].value = damage
+def set_dna_damage(damage):
+    model.parameters['DDS_0'].value = damage
 
+def declare_signal():
+    
+    hh
 def declare_monomers():
     """Declare the monomers in the Tashima model
     'state' is the activity state between the monomers
@@ -190,11 +193,13 @@ def declare_observables():
 def declare_functions():
     x=1
     
-#     Expression("create_preMPF", sympify("G2_M_k9/(1 + G2_M_k31*OBS_p53)"))
-#     Expression("create_Mdm2", sympify("G2_M_k24*OBS_Int^n / (G2_M_k_m^n + OBS_Int^n)"))
-#     Expression("create_intermediate", sympify("G2_M_k27*OBS_p53/ (1 + G2_M_k26*OBS_p53*OBS_Mdm2)"))
-#     Expression("sig_deg", sympify("Deg_0 - k_deg*(signal-signal_damp)"))
-#     Expression("kdamp_DDS0", sympify("k_damp*DDS_0"))
+    Expression("create_preMPF", sympify("G2_M_k9/(1 + G2_M_k31*OBS_p53)"))
+    Expression("create_Mdm2", sympify("G2_M_k24*OBS_Int^n / (G2_M_k_m^n + OBS_Int^n)"))
+    Expression("create_intermediate", sympify("G2_M_k27*OBS_p53/ (1 + G2_M_k26*OBS_p53*OBS_Mdm2)"))
+    Expression("sig_deg", sympify("Deg_0 - k_deg*(signal-signal_damp)"))
+    Expression("kdamp_DDS0", sympify("k_damp*DDS_0"))
+    
+    alias_model_components()
 #     
 # ***Rules***
 def declare_rules():
